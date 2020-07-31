@@ -1,15 +1,18 @@
-const data = {
-  inputs: {
-    variables: [
-      { name: 'main', expr: 'Random', persistRand: false }
-    ],
-    outputs: [
-      'main + Random',
-      'main',
-      'main + Random',
-      'main'
-    ]
-  }
+const data = JSON.parse(localStorage.getItem('data')) || {
+  variables: [
+    {
+      name: 'main',
+      expr: 'Random',
+      persistRand: false,
+      randVals: null
+    }
+  ],
+  parts: [
+    { expr: 'main + Random'},
+    { expr: 'main'},
+    { expr: 'main + Random'},
+    { expr: 'main'}
+  ]
 }
 
 var app = new Vue({
@@ -18,6 +21,11 @@ var app = new Vue({
   methods: {
     generate() {
       
+    }
+  },
+  watch: {
+    $data() {
+      localStorage.setItem('data', JSON.stringify(data))
     }
   }
 })
