@@ -1,4 +1,4 @@
-var data = {
+var project = {
   variables: [
     {
       name: 'main',
@@ -14,39 +14,65 @@ var data = {
     { expr: 'main' }
   ]
 }
-data = JSON.parse(localStorage.getItem('data')) || data
+// const storedData = JSON.parse(localStorage.getItem('project'))
+project = JSON.parse(localStorage.getItem('project')) || project
+
+var data = {
+  project,
+  ready: false,
+  instruments: 0
+}
+
+var sequence = JSON.parse(localStorage.getItem('sequence'))
+var visualizer
+var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
+model.initialize().then(() => data.ready = true)
 
 var app = new Vue({
   el: '#app',
   data,
   methods: {
     generate() {
+      tf.engine().startScope()
+      const promises = []
+
       const vars = { }
-      data.variables.forEach(variable => {
+      project.variables.forEach(variable => {
         const out = evaluateExpression(variable.expr, vars, variable.randomize, variable.randVals)
         vars[variable.name] = out.result
-        Promise.all(
-          randVals.map(rand => rand.array())
-        ).then(randVals => {
-          variable.randVals = randVals
-        })
+        promises.push(
+          Promise.all(randVals.map(rand => rand.array()))
+          .then(randVals => {
+            variable.randVals = randVals
+          })
+        )
       })
-      console.log('variables', vars)
 
-      const parts = data.parts.map(part => evaluateExpression(part.expr, vars, true))
+      const parts = project.parts.map(part => evaluateExpression(part.expr, vars, true))
+      const tensorParts = []
       parts.forEach(part => {
-        part.result.print()
+        if (part.result instanceof tf.Tensor) tensorParts.push(part.result)
       })
-      console.log('parts', parts)
+
+      promises.push(
+        model.decode(tf.stack(tensorParts))
+        .then(results => {
+          sequence = mm.sequences.concatenate(results)
+          localStorage.setItem('sequence', JSON.stringify(sequence))
+          visualizer = new mm.PianoRollSVGVisualizer(sequence, document.getElementById('viz'))
+        })
+      )
+
+      Promise.all(promises).then(() => tf.engine().endScope())
     },
     addVariable(index) {
       const newVal = { name: '', expr: '', randomize: true, randVals: null }
-      let newIndex = data.variables.length
+      let newIndex = project.variables.length
       if (typeof index == 'number') {
-        data.variables.splice(index, 0, newVal)
+        project.variables.splice(index, 0, newVal)
         newIndex = index + 1
       } else {
-        data.variables.push(newVal)
+        project.variables.push(newVal)
       }
       
       this.$nextTick(() => {
@@ -56,12 +82,12 @@ var app = new Vue({
     },
     addPart(index) {
       const newVal = { expr: '' }
-      let newIndex = data.variables.length
+      let newIndex = project.variables.length
       if (typeof index == 'number') {
         newIndex = index + 1
-        data.parts.splice(newIndex, 0, newVal)
+        project.parts.splice(newIndex, 0, newVal)
       } else {
-        data.parts.push(newVal)
+        project.parts.push(newVal)
       }
 
       this.$nextTick(() => {
@@ -70,11 +96,11 @@ var app = new Vue({
       })
     },
     keyEvent(typeKey, index, valueKey, event) {
-      let value = data[typeKey][index][valueKey]
+      let value = project[typeKey][index][valueKey]
 
       if (event.key === 'Backspace' && value === '') {
         event.preventDefault()
-        data[typeKey].splice(index, 1)
+        project[typeKey].splice(index, 1)
 
         this.$nextTick(() => {
           const el = document.getElementById('part-' + (index - 1))
@@ -91,8 +117,11 @@ var app = new Vue({
     $data: {
       deep: true,
       handler() {
-        localStorage.setItem('data', JSON.stringify(data))
+        localStorage.setItem('project', JSON.stringify(project))
       }
     }
+  },
+  mounted() {
+    if (sequence) visualizer = new mm.PianoRollSVGVisualizer(sequence, document.getElementById('viz'))
   }
 })

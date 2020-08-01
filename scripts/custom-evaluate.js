@@ -24,19 +24,24 @@ var functions = {
   divide: (args) => tf.div(args[0], args[1])
 }
 
+class EvalError extends Error { }
+
 /**
  * @param { math.MathNode } node 
  */
 function evalNode(node, variables) {
-  console.log('evaluating', node, variables)
+  // console.log('evaluating', node, variables)
   if (node.isFunctionNode) {
     const fnName = node.fn.name || node.fn
+    if (!functions[fnName]) throw new EvalError(`Unknown function '${fnName}'`)
     return functions[fnName](node.args.map(arg => evalNode(arg, variables)))
   } else if (node.isOperatorNode) {
     const fnName = node.fn
-    console.log(fnName)
+    // console.log(fnName)
+    if (!functions[fnName]) throw new EvalError(`Unknown operation '${node.op}'`)
     return functions[fnName](node.args.map(arg => evalNode(arg, variables)))
   } else if (node.isSymbolNode) {
+    if (!variables[node.name]) throw new EvalError(`Unknown symbol '${node.name}'`)
     return variables[node.name]
   } else if (node.isParenthesisNode) {
     return evalNode(node.content, variables)
