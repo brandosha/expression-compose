@@ -19,6 +19,10 @@ project = JSON.parse(localStorage.getItem('project')) || project
 
 var data = {
   project,
+  errors: {
+    variables: Array(project.variables.length).fill(false),
+    parts: Array(project.parts.length).fill(false)
+  },
   ready: false,
   instruments: 0
 }
@@ -37,18 +41,38 @@ var app = new Vue({
       const promises = []
 
       const vars = { }
+      data.errors.variables = []
       project.variables.forEach(variable => {
-        const out = evaluateExpression(variable.expr, vars, variable.randomize, variable.randVals)
-        vars[variable.name] = out.result
-        promises.push(
-          Promise.all(randVals.map(rand => rand.array()))
-          .then(randVals => {
-            variable.randVals = randVals
-          })
-        )
+        try {
+          const out = evaluateExpression(variable.expr, vars, variable.randomize, variable.randVals)
+          vars[variable.name] = out.result
+          promises.push(
+            Promise.all(randVals.map(rand => rand.array()))
+            .then(randVals => {
+              variable.randVals = randVals
+            })
+          )
+
+          data.errors.variables.push(false)
+          return out
+        } catch (error) {
+          data.errors.variables.push(error.message)
+          throw error
+        }
       })
 
-      const parts = project.parts.map(part => evaluateExpression(part.expr, vars, true))
+      data.errors.parts = []
+      const parts = project.parts.map(part => {
+        try {
+          const out = evaluateExpression(part.expr, vars, true)
+
+          data.errors.parts.push(false)
+          return out
+        } catch (error) {
+          data.errors.parts.push(error.message)
+          throw error
+        }
+      })
       const tensorParts = []
       parts.forEach(part => {
         if (part.result instanceof tf.Tensor) tensorParts.push(part.result)

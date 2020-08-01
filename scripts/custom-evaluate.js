@@ -49,7 +49,7 @@ function evalNode(node, variables) {
     return node.value
   }
   
-  console.log(node.type, node)
+  throw new EvalError(`${node.type.slice(0, -4)} not supported`)
 }
 
 var randVals = []
