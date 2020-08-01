@@ -1,3 +1,14 @@
+/** @type { mm.PianoRollSVGVisualizer } */
+var visualizer
+var sequence = JSON.parse(localStorage.getItem('sequence'))
+var player = new mm.Player(false, {
+  run(note) {
+    if (visualizer) visualizer.redraw(note, true)
+  }
+})
+var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
+model.initialize().then(() => data.ready = true)
+
 var project = {
   variables: [
     {
@@ -14,7 +25,6 @@ var project = {
     { expr: 'main' }
   ]
 }
-// const storedData = JSON.parse(localStorage.getItem('project'))
 project = JSON.parse(localStorage.getItem('project')) || project
 
 var data = {
@@ -24,19 +34,18 @@ var data = {
     parts: Array(project.parts.length).fill(false)
   },
   ready: false,
+  canPlay: sequence !== null,
+  playing: false,
   instruments: 0
 }
-
-var sequence = JSON.parse(localStorage.getItem('sequence'))
-var visualizer
-var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
-model.initialize().then(() => data.ready = true)
 
 var app = new Vue({
   el: '#app',
   data,
   methods: {
     generate() {
+      player.stop()
+
       tf.engine().startScope()
       const promises = []
 
@@ -82,6 +91,7 @@ var app = new Vue({
         model.decode(tf.stack(tensorParts))
         .then(results => {
           sequence = mm.sequences.concatenate(results)
+          sequence = mm.sequences.unquantizeSequence(sequence)
           localStorage.setItem('sequence', JSON.stringify(sequence))
           visualizer = new mm.PianoRollSVGVisualizer(sequence, document.getElementById('viz'))
         })
@@ -135,6 +145,27 @@ var app = new Vue({
         if (typeKey === 'variables') this.addVariable(index)
         else this.addPart(index)
       }
+    },
+    togglePlayback() {
+      if (data.playing) {
+        player.pause()
+        data.playing = false
+      } else {
+        if (player.isPlaying()) player.resume()
+        else player.start(sequence)
+        data.playing = true
+      } 
+    },
+    downloadMidi() {
+      const cloneSequence = mm.sequences.quantizeNoteSequence(sequence)
+      cloneSequence.notes.forEach(note => {
+        if (!note.velocity) note.velocity = mm.constants.MAX_MIDI_VELOCITY
+
+        if (note.instrument === 0) note.program = 81
+        else if (note.instrument === 1) note.program = 38
+      })
+      const data = mm.sequenceProtoToMidi(cloneSequence)
+      location.href = 'data:audio/midi;base64,' + btoa(String.fromCharCode.apply(null, data))
     }
   },
   watch: {
