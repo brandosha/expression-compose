@@ -4,6 +4,9 @@ var sequence = JSON.parse(localStorage.getItem('sequence'))
 var player = new mm.Player(false, {
   run(note) {
     if (visualizer) visualizer.redraw(note, true)
+  },
+  stop() {
+    data.playing = false
   }
 })
 var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
@@ -92,6 +95,8 @@ var app = new Vue({
         .then(results => {
           sequence = mm.sequences.concatenate(results)
           sequence = mm.sequences.unquantizeSequence(sequence)
+          data.canPlay = true
+
           localStorage.setItem('sequence', JSON.stringify(sequence))
           visualizer = new mm.PianoRollSVGVisualizer(sequence, document.getElementById('viz'))
         })
