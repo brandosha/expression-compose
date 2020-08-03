@@ -108,20 +108,17 @@ var app = new Vue({
       const newVal = { name: '', expr: '', randomize: true, randVals: null }
       let newIndex = project.variables.length
       if (typeof index == 'number') {
-        project.variables.splice(index, 0, newVal)
         newIndex = index + 1
+        project.variables.splice(newIndex, 0, newVal)
       } else {
         project.variables.push(newVal)
       }
       
-      this.$nextTick(() => {
-        const el = document.getElementById('var-' + newIndex)
-        el.firstChild.firstChild.focus()
-      })
+      this.$nextTick(() => this.focusEditor('variables', newIndex))
     },
     addPart(index) {
       const newVal = { expr: '' }
-      let newIndex = project.variables.length
+      let newIndex = project.parts.length
       if (typeof index == 'number') {
         newIndex = index + 1
         project.parts.splice(newIndex, 0, newVal)
@@ -129,10 +126,24 @@ var app = new Vue({
         project.parts.push(newVal)
       }
 
-      this.$nextTick(() => {
-        const el = document.getElementById('part-' + newIndex)
+      this.$nextTick(() => this.focusEditor('parts', newIndex))
+    },
+    focusEditor(typeKey, index, valueKey) {
+      if (typeKey === 'variables') {
+        const el = document.getElementById('var-' + index)
+        if (!el) return
+
+        const childIndex = {
+          'name': 0,
+          'expr': 1
+        }[valueKey] || 0
+        el.children[childIndex].firstChild.focus()
+      } else {
+        const el = document.getElementById('part-' + index)
+        if (!el) return
+
         el.firstChild.focus()
-      })
+      }
     },
     keyEvent(typeKey, index, valueKey, event) {
       let value = project[typeKey][index][valueKey]
@@ -141,14 +152,14 @@ var app = new Vue({
         event.preventDefault()
         project[typeKey].splice(index, 1)
 
-        this.$nextTick(() => {
-          const el = document.getElementById('part-' + (index - 1))
-          if (typeKey === 'variables') el.firstChild.firstChild.focus()
-          else el.firstChild.focus()
-        })
+        this.$nextTick(() => this.focusEditor(typeKey, index - 1, valueKey))
       } else if (event.key === 'Enter') {
         if (typeKey === 'variables') this.addVariable(index)
         else this.addPart(index)
+      } else if (event.key === 'ArrowUp') {
+        this.focusEditor(typeKey, index - 1, valueKey)
+      } else if (event.key === 'ArrowDown') {
+        this.focusEditor(typeKey, index + 1, valueKey)
       }
     },
     togglePlayback() {
