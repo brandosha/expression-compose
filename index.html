@@ -36,13 +36,32 @@
         <tbody>
           <tr v-for="(variable, i) in project.variables" :id="'var-' + i">
             <td>
-              <input @keydown="keyEvent('variables', i, 'name', $event)" v-model="variable.name" class="form-control">
+              <input
+                @keydown="keyEvent('variables', i, 'name', $event)"
+                @input="errors.variables[i] = false"
+                v-model="variable.name"
+                class="form-control"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
             </td>
             <td>
-              <input @keydown="keyEvent('variables', i, 'expr', $event)" @input="errors.variables[i] = false" v-model="variable.expr" class="form-control" :class="{ 'is-invalid': errors.variables[i] }">
+              <input
+                @keydown="keyEvent('variables', i, 'expr', $event)"
+                @input="errors.variables[i] = false"
+                v-model="variable.expr"
+                class="form-control"
+                :class="{ 'is-invalid': errors.variables[i] }"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+              >
               <div class="invalid-feedback">{{ errors.variables[i] }}</div>
             </td>
-            <td>
+            <td class="pt-2">
               <div class="d-flex justify-content-center align-items-center">
                 <input v-model="variable.randomize" type="checkbox" :disabled="!variable.randVals">
               </div>

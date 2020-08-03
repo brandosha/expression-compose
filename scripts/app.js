@@ -81,6 +81,9 @@ var app = new Vue({
       data.errors.variables = []
       project.variables.forEach(variable => {
         try {
+          if (/[0-9]/.test(variable.name[0])) throw new EvalError('Variable name cannot start with a number')
+          if (/\s/.test(variable.name)) throw new EvalError('Variable name cannot include whitespace')
+
           const out = evaluateExpression(variable.expr, vars, variable.randomize, variable.randVals)
           vars[variable.name] = out.result
           promises.push(
