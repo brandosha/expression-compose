@@ -42,6 +42,26 @@ var data = {
   instruments: 0
 }
 
+var darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+window.matchMedia('(prefers-color-scheme: dark)').onchange = (val) => {
+  darkMode = val.matches
+  app.updateVisualizer()
+}
+
+function visualizerConfig() {
+  if (darkMode) {
+    return {
+      noteRGB: '180, 180, 180'
+      // activeNoteRGB: 'rgb()'
+    }
+  } else {
+    return {
+      noteRGB: '20, 20, 20'
+      // activeNoteRGB: 'rgb()'
+    }
+  }
+}
+
 var app = new Vue({
   el: '#app',
   data,
@@ -98,11 +118,19 @@ var app = new Vue({
           data.canPlay = true
 
           localStorage.setItem('sequence', JSON.stringify(sequence))
-          visualizer = new mm.PianoRollSVGVisualizer(sequence, document.getElementById('viz'))
+          this.updateVisualizer()
         })
       )
 
       Promise.all(promises).then(() => tf.engine().endScope())
+    },
+    updateVisualizer() {
+      if (sequence)
+        visualizer = new mm.PianoRollSVGVisualizer(
+          sequence,
+          document.getElementById('viz'),
+          visualizerConfig()
+        )
     },
     addVariable(index) {
       const newVal = { name: '', expr: '', randomize: true, randVals: null }
@@ -193,6 +221,6 @@ var app = new Vue({
     }
   },
   mounted() {
-    if (sequence) visualizer = new mm.PianoRollSVGVisualizer(sequence, document.getElementById('viz'))
+    this.updateVisualizer()
   }
 })
