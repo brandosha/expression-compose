@@ -6,27 +6,49 @@
     <title>Compose</title>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/styles/style.css">
   </head>
   <body>
     <div id="app" class="container pt-3">
       <h5>Variables</h5>
-      <div class="form-row mt-3">
-        <h6 class="col-3">Name</h6>
-        <h6 class="col-7">Value Expression</h6>
-        <h6 class="col-2">Randomize</h6>
-      </div>
-      <div v-for="(variable, i) in project.variables" :id="'var-' + i" class="form-row mb-2">
-        <div class="col-3">
-          <input @keydown="keyEvent('variables', i, 'name', $event)" v-model="variable.name" class="form-control">
-        </div>
-        <div class="col-7">
-          <input @keydown="keyEvent('variables', i, 'expr', $event)" @input="errors.variables[i] = false" v-model="variable.expr" class="form-control" :class="{ 'is-invalid': errors.variables[i] }">
-          <div class="invalid-feedback">{{ errors.variables[i] }}</div>
-        </div>
-        <div class="col-2 d-flex justify-content-center align-items-center">
-          <input v-model="variable.randomize" type="checkbox" :disabled="!variable.randVals">
-        </div>
-      </div>
+
+      <table class="w-100 mt-3">
+        <colgroup>
+          <col style="width: 25%;">
+          <col style="max-width: 65%;">
+          <col style="width: auto;">
+        </colgroup>
+
+        <thead>
+          <td>
+            <h6>Name</h6>
+          </td>
+          <td>
+            <h6>Value Expression</h6>
+          </td>
+          <td>
+            <h6>Randomize</h6>
+          </td>
+        </thead>
+
+        <tbody>
+          <tr v-for="(variable, i) in project.variables" :id="'var-' + i">
+            <td>
+              <input @keydown="keyEvent('variables', i, 'name', $event)" v-model="variable.name" class="form-control">
+            </td>
+            <td>
+              <input @keydown="keyEvent('variables', i, 'expr', $event)" @input="errors.variables[i] = false" v-model="variable.expr" class="form-control" :class="{ 'is-invalid': errors.variables[i] }">
+              <div class="invalid-feedback">{{ errors.variables[i] }}</div>
+            </td>
+            <td>
+              <div class="d-flex justify-content-center align-items-center">
+                <input v-model="variable.randomize" type="checkbox" :disabled="!variable.randVals">
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <div class="d-flex justify-content-end">
         <button @click="addVariable" class="btn btn-sm btn-primary ml-auto">
           Add
@@ -45,7 +67,7 @@
       </div>
 
       <button @click="generate" class="btn btn-block btn-success my-4" :disabled="!ready">
-        Generate
+        {{ ready ? 'Generate' : 'Initializing...' }}
       </button>
 
       <div v-if="canPlay">
