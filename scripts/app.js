@@ -12,7 +12,7 @@ var player = new mm.Player(false, {
 var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
 model.initialize().then(() => data.ready = true)
 
-var project = {
+const defaultProject = {
   variables: [
     {
       name: 'main',
@@ -26,9 +26,14 @@ var project = {
     { expr: 'main' },
     { expr: 'main + random()' },
     { expr: 'main' }
-  ]
+  ],
+  temperature: 0.5,
+  tempo: 120
 }
-project = JSON.parse(localStorage.getItem('project')) || project
+var project = defaultProject
+
+const storedProject = JSON.parse(localStorage.getItem('project'))
+if (storedProject) project = Object.assign(defaultProject, storedProject)
 
 var data = {
   project,
@@ -51,15 +56,9 @@ window.matchMedia('(prefers-color-scheme: dark)').onchange = (val) => {
 
 function visualizerConfig() {
   if (darkMode) {
-    return {
-      noteRGB: '180, 180, 180'
-      // activeNoteRGB: 'rgb()'
-    }
+    return { noteRGB: '180, 180, 180' }
   } else {
-    return {
-      noteRGB: '20, 20, 20'
-      // activeNoteRGB: 'rgb()'
-    }
+    return { noteRGB: '20, 20, 20' }
   }
 }
 
@@ -118,8 +117,11 @@ var app = new Vue({
         if (part.result instanceof tf.Tensor) tensorParts.push(part.result)
       })
 
+      const temperature = parseFloat(project.temperature)
+      const tempo = parseInt(project.tempo)
+
       promises.push(
-        model.decode(tf.stack(tensorParts))
+        model.decode(tf.stack(tensorParts), temperature, undefined, undefined, tempo)
         .then(results => {
           sequence = mm.sequences.concatenate(results)
           sequence = mm.sequences.unquantizeSequence(sequence)
@@ -218,7 +220,18 @@ var app = new Vue({
         else if (note.instrument === 1) note.program = 38
       })
       const data = mm.sequenceProtoToMidi(cloneSequence)
-      location.href = 'data:audio/midi;base64,' + btoa(String.fromCharCode.apply(null, data))
+      const dataUrl = 'data:audio/midi;base64,' + btoa(String.fromCharCode.apply(null, data))
+
+      const name = prompt('Enter the name of your project')
+      if (!name) return
+      
+      const downloadLink = document.createElement('a')
+      downloadLink.style.position = 'fixed'
+      downloadLink.style.left = '-100px'
+      downloadLink.href = dataUrl
+      downloadLink.download = name + '.mid'
+      downloadLink.click()
+      downloadLink.remove()
     }
   },
   watch: {
