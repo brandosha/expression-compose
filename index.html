@@ -68,7 +68,7 @@
       </div>
 
       <button @click="generate" class="btn btn-block btn-success my-4" :disabled="!ready">
-        {{ ready ? 'Generate' : 'Initializing...' }}
+        {{ ready ? generating ? 'Composing...' : 'Compose' : 'Initializing...' }}
       </button>
 
       <div v-if="canPlay">

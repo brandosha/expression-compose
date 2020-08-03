@@ -39,6 +39,7 @@ var data = {
   ready: false,
   canPlay: sequence !== null,
   playing: false,
+  generating: false,
   instruments: 0
 }
 
@@ -67,7 +68,11 @@ var app = new Vue({
   data,
   methods: {
     generate() {
+      if (data.generating) return
+      data.generating = true
+      
       player.stop()
+      data.playing = false
 
       tf.engine().startScope()
       const promises = []
@@ -115,10 +120,11 @@ var app = new Vue({
         .then(results => {
           sequence = mm.sequences.concatenate(results)
           sequence = mm.sequences.unquantizeSequence(sequence)
-          data.canPlay = true
-
           localStorage.setItem('sequence', JSON.stringify(sequence))
           this.updateVisualizer()
+          
+          data.generating = false
+          data.canPlay = true
         })
       )
 
