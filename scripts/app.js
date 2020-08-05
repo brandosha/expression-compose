@@ -9,8 +9,14 @@ var player = new mm.Player(false, {
     data.playing = false
   }
 })
-var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
-model.initialize().then(() => data.ready = true)
+
+/** @type { Object<string, mm.MusicVAE> } */
+var models = { }
+const modelIds = ['trio_4bar', 'mel_4bar_small_q2', 'mel_2bar_small']
+modelIds.forEach(id => models[id] = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/' + id))
+
+/*var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
+model.initialize().then(() => data.ready = true)*/
 
 const defaultProject = {
   variables: [
@@ -28,7 +34,8 @@ const defaultProject = {
     { expr: 'main' }
   ],
   temperature: 0.5,
-  tempo: 120
+  tempo: 120,
+  model: 'trio_4bar'
 }
 var project = defaultProject
 
@@ -121,7 +128,7 @@ var app = new Vue({
       const tempo = parseInt(project.tempo)
 
       promises.push(
-        model.decode(tf.stack(tensorParts), temperature, undefined, undefined, tempo)
+        models[project.model].decode(tf.stack(tensorParts), temperature, undefined, undefined, tempo)
         .then(results => {
           sequence = mm.sequences.concatenate(results)
           sequence = mm.sequences.unquantizeSequence(sequence)
@@ -224,7 +231,7 @@ var app = new Vue({
 
       const name = prompt('Enter the name of your project')
       if (!name) return
-      
+
       const downloadLink = document.createElement('a')
       downloadLink.style.position = 'fixed'
       downloadLink.style.left = '-100px'
@@ -240,9 +247,21 @@ var app = new Vue({
       handler() {
         localStorage.setItem('project', JSON.stringify(project))
       }
+    },
+    'project.model': function() {
+      const model = models[project.model]
+      if (!model.isInitialized()) {
+        data.ready = false
+
+        model.initialize()
+        .then(() => data.ready = true)
+      }
     }
   },
   mounted() {
     this.updateVisualizer()
+
+    models[project.model].initialize()
+    .then(() => data.ready = true)
   }
 })
