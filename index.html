@@ -117,6 +117,7 @@
         <div class="col-3 col-md-2">
           <select v-model="project.model" id="model-select">
             <option value="trio_4bar">Trio</option>
+            <option value="multitrack">Multitrack</option>
             <option value="mel_4bar_small_q2">Melody</option>
             <option value="mel_2bar_small">Melody Shorter</option>
           </select>
@@ -134,14 +135,21 @@
         <button @click="downloadMidi" class="btn btn-sm btn-outline-primary">
           Download
         </button>
+        <button @click="openShareLink" class="btn btn-sm btn-outline-primary">
+          Share
+        </button>
       </div>
       
       <div class="overflow-auto my-4 py-2">
         <svg id="viz"></svg>
       </div>
     </div>
+    
+    <!-- dev console on mobile -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@^1.19.0"></script>
+    <script> if (!OscillatorNode) var OscillatorNode = { prototype: {} } // iPadOS Magenta workaround </script>
+    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@^1.20.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.1.0/math.min.js"></script>
 

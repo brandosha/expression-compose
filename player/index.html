@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Player - Expression Compose</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/styles/dark.css">
+    <link rel="stylesheet" href="/styles/style.css">
+  </head>
+  <body>
+    <div class="container py-3">
+      <div class="overflow-auto py-2">
+        <svg id="viz"></svg>
+      </div>
+
+      <div class="row">
+        <div class="col-auto">
+          <button id="playback-button" onclick="togglePlayback()" class="btn btn-dark">
+            Play
+          </button>
+        </div>
+        <div class="col">
+          <input id="url" class="form-control" readonly="readonly">
+        </div>
+        <div class="col-auto">
+          <button id="playback-button" onclick="copyUrl()" class="btn btn-outline-primary">
+            Copy URL
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <script> if (!OscillatorNode) var OscillatorNode = { prototype: {} } // iPadOS Magenta workaround </script>
+    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@^1.20.0"></script>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,3 +1,7 @@
+if (location.hash.toLowerCase() == '#dev=true') {
+  eruda.init()
+}
+
 /** @type { mm.PianoRollSVGVisualizer } */
 var visualizer
 var sequence = JSON.parse(localStorage.getItem('sequence'))
@@ -12,7 +16,7 @@ var player = new mm.Player(false, {
 
 /** @type { Object<string, mm.MusicVAE> } */
 var models = { }
-const modelIds = ['trio_4bar', 'mel_4bar_small_q2', 'mel_2bar_small']
+const modelIds = ['trio_4bar', 'mel_4bar_small_q2', 'mel_2bar_small', 'multitrack']
 modelIds.forEach(id => models[id] = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/' + id))
 
 /*var model = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar')
@@ -239,6 +243,10 @@ var app = new Vue({
       downloadLink.download = name + '.mid'
       downloadLink.click()
       downloadLink.remove()
+    },
+    openShareLink() {
+      const shareLink = 'https://expressioncompose.brandosha.repl.co/player#' + btoa(JSON.stringify(sequence))
+      window.open(shareLink)
     }
   },
   watch: {
