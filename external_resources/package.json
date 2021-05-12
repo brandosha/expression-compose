@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "@magenta/music": "^1.19.0",
-    "mathjs": "^7.1.0",
+    "mathjs": "^7.5.1",
     "vue": "^2.6.11"
   }
 }
